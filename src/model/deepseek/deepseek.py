@@ -3,7 +3,7 @@ import httpx
 from typing import Optional
 import json
 
-def ask_deepseek(api_key: str, model: str, user_message: str, prompt: str, proxy: str = "") -> tuple[bool, str]:
+async def ask_deepseek(api_key: str, model: str, user_message: str, prompt: str, proxy: str = "") -> tuple[bool, str]:
     """
     向DeepSeek模型发送消息并获取响应。
 
@@ -21,10 +21,14 @@ def ask_deepseek(api_key: str, model: str, user_message: str, prompt: str, proxy
         logger.info(f"使用代理: {proxy} 连接DeepSeek")
         if not proxy.startswith(("http://", "https://")):
             proxy = f"http://{proxy}"
-        http_client = httpx.Client(proxy=proxy)
+        async with httpx.AsyncClient(proxy=proxy) as http_client:
+            return await _make_request(http_client, api_key, model, user_message, prompt)
     else:
-        http_client = httpx.Client()
+        async with httpx.AsyncClient() as http_client:
+            return await _make_request(http_client, api_key, model, user_message, prompt)
 
+async def _make_request(http_client: httpx.AsyncClient, api_key: str, model: str, user_message: str, prompt: str) -> tuple[bool, str]:
+    """发送请求到DeepSeek API"""
     # 准备请求数据
     headers = {
         "Authorization": f"Bearer {api_key}",
@@ -46,7 +50,7 @@ def ask_deepseek(api_key: str, model: str, user_message: str, prompt: str, proxy
 
     try:
         # 发送API请求
-        response = http_client.post(
+        response = await http_client.post(
             "https://api.deepseek.com/v1/chat/completions",
             headers=headers,
             json=data,

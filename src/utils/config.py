@@ -51,10 +51,17 @@ class ChatGPTConfig:
     PROXY_FOR_CHAT_GPT: str
 
 @dataclass
+class DeepSeekConfig:
+    API_KEYS: List[str]
+    MODEL: str
+    PROXY_FOR_DEEPSEEK: str
+
+@dataclass
 class Config:
     SETTINGS: SettingsConfig
     AI_CHATTER: ChatterConfig
     CHAT_GPT: ChatGPTConfig
+    DEEPSEEK: DeepSeekConfig
     MESSAGE_SENDER: MessageSenderConfig
     lock: asyncio.Lock = field(default_factory=asyncio.Lock)
 
@@ -112,6 +119,11 @@ class Config:
                 API_KEYS=data["CHAT_GPT"]["API_KEYS"],
                 MODEL=data["CHAT_GPT"]["MODEL"],
                 PROXY_FOR_CHAT_GPT=data["CHAT_GPT"]["PROXY_FOR_CHAT_GPT"],
+            ),
+            DEEPSEEK=DeepSeekConfig(
+                API_KEYS=data["DEEPSEEK"]["API_KEYS"],
+                MODEL=data["DEEPSEEK"]["MODEL"],
+                PROXY_FOR_DEEPSEEK=data["DEEPSEEK"]["PROXY_FOR_DEEPSEEK"],
             ),
         )
 
