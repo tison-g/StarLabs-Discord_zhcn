@@ -200,7 +200,7 @@ class DiscordChatter:
                             #     f"{self.account.index} | Messages contents: {messages_contents}"
                             # )
 
-                            gpt_response = await self._gpt_batch_messages(
+                            gpt_response = await self._deepseek_batch_messages(
                                 messages_contents,
                             )
                             gpt_response = (
@@ -421,12 +421,14 @@ class DiscordChatter:
             
             if not success:
                 logger.warning(f"{self.account.index} | DeepSeek API失败，切换到ChatGPT: {response}")
-                return await self._gpt_referenced_messages(main_message_content, referenced_message_content)
+                return
+                # return await self._gpt_referenced_messages(main_message_content, referenced_message_content)
                 
             return response
         except Exception as e:
             logger.warning(f"{self.account.index} | DeepSeek错误，切换到ChatGPT: {str(e)}")
-            return await self._gpt_referenced_messages(main_message_content, referenced_message_content)
+            return
+            # return await self._gpt_referenced_messages(main_message_content, referenced_message_content)
 
     async def _gpt_batch_messages(self, messages_contents: list[str]) -> str:
         """使用GPT基于聊天历史生成新消息"""
@@ -468,9 +470,11 @@ class DiscordChatter:
             
             if not success:
                 logger.warning(f"{self.account.index} | DeepSeek API失败，切换到ChatGPT: {response}")
-                return await self._gpt_batch_messages(messages_contents)
+                return
+                # return await self._gpt_batch_messages(messages_contents)
                 
             return response
         except Exception as e:
             logger.warning(f"{self.account.index} | DeepSeek错误，切换到ChatGPT: {str(e)}")
-            return await self._gpt_batch_messages(messages_contents)
+            return 
+            # return await self._gpt_batch_messages(messages_contents)
