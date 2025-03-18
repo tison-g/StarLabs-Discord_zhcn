@@ -1,3 +1,112 @@
+import asyncio
+from dataclasses import dataclass
+from loguru import logger
+import random
+from curl_cffi.requests import AsyncSession
+
+
+from src.model.discord.utils import calculate_nonce
+from src.utils.config import Config
+from src.model.gpt import ask_chatgpt
+from src.model.gpt.prompts import (
+    BATCH_MESSAGES_SYSTEM_PROMPT,
+    REFERENCED_MESSAGES_SYSTEM_PROMPT,
+)
+from src.utils.constants import Account
+
+
+@dataclass
+class ReceivedMessage:
+    """Represents a message received from Discord"""
+
+    type: int
+    content: str
+    message_id: str
+    channel_id: str
+    author_id: str
+    author_username: str
+    referenced_message_content: str
+    referenced_message_author_id: str
+
+
+class DiscordChatter:
+    def __init__(
+        self,
+        account: Account,
+        client: AsyncSession,
+        config: Config,
+    ):
+        self.account = account
+        self.client = client
+        self.config = config
+
+        self.my_account_id: str = ""
+        self.my_account_username: str = ""
+        self.my_replies_messages: list = []
+
+    async def start_chatting(self) -> bool:
+        number_of_messages_to_send = random.randint(
+            self.config.AI_CHATTER.MESSAGES_TO_SEND_PER_ACCOUNT[0],
+            self.config.AI_CHATTER.MESSAGES_TO_SEND_PER_ACCOUNT[1],
+        )
+        for message_index in range(number_of_messages_to_send):
+            for retry_index in range(self.config.SETTINGS.ATTEMPTS):
+                try:
+                    message_sent = False
+                    replied_to_me = False
+
+                    last_messages = await self._get_last_chat_messages(
+                        self.config.AI_CHATTER.GUILD_ID,
+                        self.config.AI_CHATTER.CHANNEL_ID,
+                    )
+                    logger.info(
+                        f"{self.account.index} | Last messages: {len(last_messages)} "
+                    )
+
+                    if self.my_account_id:
+                        # First check if anyone replied to our messages
+                        replies_to_me = [
+                            msg
+                            for msg in last_messages
+                            if msg.referenced_message_author_id == self.my_account_id
+                            and msg.message_id
+                            not in self.my_replies_messages  # Don't reply to messages we've already replied to
+                            and msg.author_username
+                            != self.my_account_username  # Don't reply to our own messages
+                        ]
+
+                        if replies_to_me:
+                            # Check if we should answer based on answer_percentage
+                            should_answer = (
+                                random.random() * 100
+                            ) < self.config.AI_CHATTER.ANSWER_PERCENTAGE
+
+                            if should_answer:
+                                # Someone replied to us - let's reply back
+                                message = random.choice(replies_to_me)
+                                logger.info(
+                                    f"{self.account.index} | Replying to {message.author_username} who replied to our message. "
+                                    f"Their message: {message.content}"
+                                )
+                                gpt_response = await self._gpt_referenced_messages(
+                                    message.content,
+                                    message.referenced_message_content,
+                                )
+                                gpt_response = (
+                                    gpt_response.replace("```", "")
+                                    .replace("```python", "")
+                                    .replace("```", "")
+                                    .replace('"', "")
+                                )
+                                random_pause = random.randint(
+                                    self.config.AI_CHATTER.PAUSE_BEFORE_MESSAGE[0],
+                                    self.config.AI_CHATTER.PAUSE_BEFORE_MESSAGE[1],
+                                )
+                                logger.info(
+                                    f"{self.account.index} | GPT response: {gpt_response}. Pausing for {random_pause} seconds before sending message."
+                                )
+                                await asyncio.sleep(random_pause)
+                                ok, json_response = await self._send_message(
                                     gpt_response,
                                     self.config.AI_CHATTER.CHANNEL_ID,
                                     self.config.AI_CHATTER.GUILD_ID,
@@ -301,7 +410,7 @@
         try:
             api_key = random.choice(self.config.DEEPSEEK.API_KEYS)
             user_message = f"消息1: {referenced_message_content}\n消息2: {main_message_content}"
-            
+
             success, response = await ask_deepseek(
                 api_key=api_key,
                 model=self.config.DEEPSEEK.MODEL,
@@ -309,12 +418,12 @@
                 prompt=DEEPSEEK_REFERENCED_MESSAGES_SYSTEM_PROMPT,
                 proxy=self.config.DEEPSEEK.PROXY_FOR_DEEPSEEK,
             )
-            
+
             if not success:
                 logger.warning(f"{self.account.index} | DeepSeek API失败，切换到ChatGPT: {response}")
                 return
                 # return await self._gpt_referenced_messages(main_message_content, referenced_message_content)
-                
+
             return response
         except Exception as e:
             logger.warning(f"{self.account.index} | DeepSeek错误，切换到ChatGPT: {str(e)}")
@@ -354,7 +463,7 @@
         """
         try:
             api_key = random.choice(self.config.DEEPSEEK.API_KEYS)
-            
+
             success, response = await ask_deepseek(
                 api_key=api_key,
                 model=self.config.DEEPSEEK.MODEL,
@@ -362,14 +471,14 @@
                 prompt=DEEPSEEK_BATCH_MESSAGES_SYSTEM_PROMPT,
                 proxy=self.config.DEEPSEEK.PROXY_FOR_DEEPSEEK,
             )
-            
+
             if not success:
                 logger.warning(f"{self.account.index} | DeepSeek API失败，切换到ChatGPT: {response}")
                 return
                 # return await self._gpt_batch_messages(messages_contents)
-                
+
             return response
         except Exception as e:
             logger.warning(f"{self.account.index} | DeepSeek错误，切换到ChatGPT: {str(e)}")
-            return 
+            return
             # return await self._gpt_batch_messages(messages_contents)

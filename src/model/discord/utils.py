@@ -54,7 +54,7 @@ async def get_guild_ids(client: AsyncSession, invite_code: str, account: Account
         }
 
         response = await client.get(f'https://discord.com/api/v9/invites/{invite_code}', params=params, headers=headers)
-        
+
         if "You need to verify your account" in response.text:
             logger.error(f"{account.index} | 账号需要验证(邮箱代码等)。")
             return "verification_failed", "", False
@@ -67,7 +67,7 @@ async def get_guild_ids(client: AsyncSession, invite_code: str, account: Account
     except Exception as err:
         logger.error(f"{account.index} | 获取公会ID失败: {err}")
         return None, None, False
-    
+
 
 def create_x_context_properties(location_guild_id: str, location_channel_id: str) -> str:
     return base64.b64encode(json.dumps({
@@ -97,4 +97,30 @@ async def init_cf(account: Account, client: AsyncSession) -> bool:
                           )
 
         if await set_response_cookies(client, resp):
-            logger
+            logger.success(f"{account.index} | Initialized new cookies.")
+            return True
+        else:
+            logger.error(f"{account.index} | Failed to initialize new cookies.")
+            return False
+
+    except Exception as err:
+        logger.error(f"{account.index} | Failed to initialize new cookies: {err}")
+        return False
+
+
+async def set_response_cookies(client: AsyncSession, response: Response) -> bool:
+    try:
+        cookies = response.headers.get_list("set-cookie")
+        for cookie in cookies:
+            try:
+                key, value = cookie.split(';')[0].strip().split("=")
+                client.cookies.set(name=key, value=value, domain="discord.com", path="/")
+
+            except:
+                pass
+
+        return True
+
+    except Exception as err:
+        logger.error(f"Failed to set response cookies: {err}")
+        return False
