@@ -10,12 +10,12 @@ from src.utils.constants import Account
 async def leave_guild(account: Account, config: Config, guild_id: str) -> bool:
     for retry in range(config.SETTINGS.ATTEMPTS):
         """
-        Leave Discord guild
+        离开Discord公会
 
-        Args:
-            token: Discord token
-            guild_id: ID of guild to leave
-            proxy: Proxy in format user:pass@ip:port
+        参数:
+            token: Discord令牌
+            guild_id: 要离开的公会ID
+            proxy: 格式为 user:pass@ip:port 的代理
         """
         headers = {
             "sec-ch-ua-platform": '"Windows"',
@@ -30,7 +30,7 @@ async def leave_guild(account: Account, config: Config, guild_id: str) -> bool:
         }
 
         try:
-            # Настраиваем прокси с аутентификацией
+            # 配置带有身份验证的代理
             if account.proxy:
                 proxy_auth = None
                 if "@" in account.proxy:
@@ -48,24 +48,24 @@ async def leave_guild(account: Account, config: Config, guild_id: str) -> bool:
                 async with session.delete(
                     f"https://discord.com/api/v9/users/@me/guilds/{guild_id}",
                     headers=headers,
-                    json={"lurking": False},  # Этот параметр иногда требуется Discord
+                    json={"lurking": False},  # 这个参数有时需要 Discord
                     proxy=proxy_url,
                     proxy_auth=proxy_auth,
-                    ssl=False,  # Отключаем SSL для работы с прокси
+                    ssl=False,  # 禁用SSL以使用代理
                 ) as response:
 
                     if response.status in [
                         200,
                         204,
-                    ]:  # Discord может вернуть оба эти статуса при успехе
+                    ]:  # Discord可能会在成功时返回这两个状态码
                         logger.success(
-                            f"{account.index} | Successfully left guild {guild_id}"
+                            f"{account.index} | 成功离开公会 {guild_id}"
                         )
                         return True
                     else:
                         error_text = await response.text()
                         logger.error(
-                            f"{account.index} | Failed to leave guild {guild_id}. Status: {response.status}, Response: {error_text}"
+                            f"{account.index} | 离开公会 {guild_id} 失败。状态: {response.status}, 响应: {error_text}"
                         )
                         return False
 
@@ -75,7 +75,7 @@ async def leave_guild(account: Account, config: Config, guild_id: str) -> bool:
                 config.SETTINGS.PAUSE_BETWEEN_ATTEMPTS[1],
             )
             logger.error(
-                f"{account.index} | Error while leaving guild {guild_id}: {str(e)}. Pausing for {random_pause} seconds."
+                f"{account.index} | 离开公会 {guild_id} 时出错: {str(e)}。暂停 {random_pause} 秒。"
             )
             await asyncio.sleep(random_pause)
 

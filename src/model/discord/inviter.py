@@ -24,7 +24,7 @@ class Inviter:
         for retry in range(self.config.SETTINGS.ATTEMPTS):
             try:
                 if not await init_cf(self.account, self.session):
-                    raise Exception("Failed to initialize cf")
+                    raise Exception("初始化cf失败")
 
                 guild_id, channel_id, success = await get_guild_ids(
                     self.session, invite_code, self.account
@@ -48,7 +48,7 @@ class Inviter:
                     self.config.SETTINGS.PAUSE_BETWEEN_ATTEMPTS[1],
                 )
                 logger.error(
-                    f"{self.account.index} | Error: {e}. Retrying in {random_sleep} seconds..."
+                    f"{self.account.index} | 错误: {e}. {random_sleep} 秒后重试..."
                 )
                 await asyncio.sleep(random_sleep)
         return False
@@ -58,25 +58,6 @@ class Inviter:
     ) -> bool:
         for retry in range(self.config.SETTINGS.ATTEMPTS):
             try:
-                # nocaptcha = NoCaptcha(
-                #     user_token=self.config.INVITER.NOCAPTCHA_API_KEY,
-                #     session=self.session,
-                # )
-                # success, error = await nocaptcha.solve(
-                #     discord_token=self.account.token, guild_id=guild_id
-                # )
-
-                # if success:
-                #     # Continue with join process
-                #     pass
-                # else:
-                #     if "错误的令牌" in str(error):
-                #         logger.error(f"Captcha solving failed: wrong NoCaptcha API key.")
-                #         return None
-                #     else:
-                #         logger.error(f"Captcha solving failed: {error}")
-                #         return False
-
                 headers = {
                     "accept": "*/*",
                     "accept-language": "en-GB,en-US;q=0.9,en;q=0.8,ru;q=0.7,zh-TW;q=0.6,zh;q=0.5",
@@ -115,42 +96,28 @@ class Inviter:
                     "You need to update your app to join this server." in response.text
                     or "captcha_rqdata" in response.text
                 ):
-                    logger.error(f"{self.account.index} | Captcha detected. Can't solve it.")
+                    logger.error(f"{self.account.index} | 检测到验证码。无法解决。")
                     return None
 
-                    # nocaptcha = NoCaptcha(
-                    #     user_token=self.config.INVITER.NOCAPTCHA_API_KEY,
-                    #     session=self.session,
-                    # )
-                    # success, error = await nocaptcha.solve(
-                    #     discord_token=self.account.token, guild_id=guild_id
-                    # )
-
-                    # if success:
-                    #     # Continue with join process
-                    #     pass
-                    # else:
-                    #     logger.error(f"Captcha solving failed: {error}")
-
                 elif response.status_code == 200 and response.json()["type"] == 0:
-                    logger.success(f"{self.account.index} | Account joined the server!")
+                    logger.success(f"{self.account.index} | 账号已加入服务器!")
                     return True
 
                 elif "Unauthorized" in response.text:
                     logger.error(
-                        f"{self.account.index} | Incorrect discord token or your account is blocked."
+                        f"{self.account.index} | Discord令牌不正确或您的账号已被封停。"
                     )
                     return False
 
                 elif "You need to verify your account in order to" in response.text:
                     logger.error(
-                        f"{self.account.index} | Account needs verification (Email code etc)."
+                        f"{self.account.index} | 账号需要验证(邮箱代码等)。"
                     )
                     return False
 
                 else:
                     logger.error(
-                        f"{self.account.index} | Unknown error: {response.text}"
+                        f"{self.account.index} | 未知错误: {response.text}"
                     )
 
             except Exception as e:
@@ -159,7 +126,7 @@ class Inviter:
                     self.config.SETTINGS.PAUSE_BETWEEN_ATTEMPTS[1],
                 )
                 logger.error(
-                    f"{self.account.index} | Send invite error: {e}. Retrying in {random_sleep} seconds..."
+                    f"{self.account.index} | 发送邀请请求错误: {e}. {random_sleep} 秒后重试..."
                 )
                 await asyncio.sleep(random_sleep)
 

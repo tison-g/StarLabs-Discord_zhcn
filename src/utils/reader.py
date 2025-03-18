@@ -11,7 +11,6 @@ from src.utils.constants import Account
 # 创建全局锁用于同步文件访问
 file_read_lock = threading.Lock()
 
-
 def read_txt_file(file_name: str, file_path: str) -> list:
     """
     使用锁机制安全地读取文本文件
@@ -27,7 +26,7 @@ def read_txt_file(file_name: str, file_path: str) -> list:
         try:
             # 检查文件是否存在
             if not os.path.exists(file_path):
-                logger.warning(f"File {file_path} does not exist.")
+                logger.warning(f"文件 {file_path} 不存在。")
                 return []
 
             # 读取文件
@@ -35,16 +34,15 @@ def read_txt_file(file_name: str, file_path: str) -> list:
                 items = [line.strip() for line in file if line.strip()]
 
             if not items:
-                logger.warning(f"File {file_path} is empty.")
+                logger.warning(f"文件 {file_path} 为空。")
                 return []
 
-            logger.success(f"Successfully loaded {len(items)} items from {file_name}.")
+            logger.success(f"成功从 {file_name} 加载了 {len(items)} 个项目。")
             return items
 
         except Exception as e:
-            logger.error(f"Error reading file {file_path}: {str(e)}")
+            logger.error(f"读取文件 {file_path} 时出错: {str(e)}")
             return []
-
 
 def read_csv_accounts(file_path: str) -> List[Account]:
     """
@@ -105,16 +103,15 @@ def read_csv_accounts(file_path: str) -> List[Account]:
                 )
                 accounts.append(account)
         
-        logger.success(f"Successfully loaded {len(accounts)} accounts from data/accounts.csv")
+        logger.success(f"成功从 data/accounts.csv 加载了 {len(accounts)} 个账号")
         return accounts
         
     except FileNotFoundError:
-        logger.error(f"File {file_path} does not exist.")
+        logger.error(f"文件 {file_path} 不存在。")
         return []
     except Exception as e:
-        logger.error(f"Error reading CSV file: {str(e)}")
+        logger.error(f"读取CSV文件时出错: {str(e)}")
         return []
-
 
 async def read_pictures(file_path: str) -> List[str]:
     """
@@ -130,14 +127,14 @@ async def read_pictures(file_path: str) -> List[str]:
 
     # 如果文件夹不存在则创建
     os.makedirs(file_path, exist_ok=True)
-    logger.info(f"Reading pictures from {file_path}")
+    logger.info(f"正在从 {file_path} 读取图片")
 
     try:
         # 获取文件列表
         files = os.listdir(file_path)
 
         if not files:
-            logger.warning(f"No files found in {file_path}")
+            logger.warning(f"在 {file_path} 中未找到文件")
             return encoded_images
 
         # 处理每个文件
@@ -153,13 +150,13 @@ async def read_pictures(file_path: str) -> List[str]:
                         )
                         encoded_images.append(encoded_image)
                 except Exception as e:
-                    logger.error(f"Error loading image {filename}: {str(e)}")
+                    logger.error(f"加载图片 {filename} 时出错: {str(e)}")
 
     except FileNotFoundError:
-        logger.error(f"Directory not found: {file_path}")
+        logger.error(f"目录未找到: {file_path}")
     except PermissionError:
-        logger.error(f"Permission denied when accessing: {file_path}")
+        logger.error(f"访问时权限被拒绝: {file_path}")
     except Exception as e:
-        logger.error(f"Error reading pictures from {file_path}: {str(e)}")
+        logger.error(f"从 {file_path} 读取图片时出错: {str(e)}")
 
     return encoded_images

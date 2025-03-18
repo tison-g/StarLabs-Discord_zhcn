@@ -24,24 +24,24 @@ async def message_sender(account: Account, config: Config, session: AsyncSession
 
                     message_id = await send_chat_message(account, config, session, config.MESSAGE_SENDER.GUILD_ID, config.MESSAGE_SENDER.CHANNEL_ID, message_to_send)
                     
-                    logger.info(f"{account.index} | Message {message_id} sent successfully.")
+                    logger.info(f"{account.index} | 消息 {message_id} 发送成功。")
 
                     if config.MESSAGE_SENDER.DELETE_MESSAGE_INSTANTLY:
                         await delete_message(account, config, session, config.MESSAGE_SENDER.GUILD_ID, config.MESSAGE_SENDER.CHANNEL_ID, message_id)
-                        logger.info(f"{account.index} | Message {message_id} deleted successfully.")
+                        logger.info(f"{account.index} | 消息 {message_id} 删除成功。")
 
                     random_sleep = random.randint(config.MESSAGE_SENDER.PAUSE_BETWEEN_MESSAGES[0], config.MESSAGE_SENDER.PAUSE_BETWEEN_MESSAGES[1])
-                    logger.info(f"{account.index} | Waiting {random_sleep} seconds before next message...")
+                    logger.info(f"{account.index} | 发送下一条消息前暂停 {random_sleep} 秒。")
                     await asyncio.sleep(random_sleep)   
                     break
 
                 except Exception as e:
                     random_sleep = random.randint(config.SETTINGS.PAUSE_BETWEEN_ATTEMPTS[0], config.SETTINGS.PAUSE_BETWEEN_ATTEMPTS[1])
-                    logger.error(f"{account.index} | Error sending chat message ({message_number}): {e}. Retrying in {random_sleep} seconds...")
+                    logger.error(f"{account.index} | 发送聊天消息错误 ({message_number}): {e}. {random_sleep} 秒后重试...")
                     await asyncio.sleep(random_sleep)
                     
     except Exception as e:
-        logger.error(f"{account.index} | Error sending chat message: {e}")
+        logger.error(f"{account.index} | 发送聊天消息错误: {e}")
         return False
     
 
@@ -84,17 +84,18 @@ async def send_chat_message(account: Account, config: Config, session: AsyncSess
             )
 
             if response.status_code == 200:
-                logger.success(f"{account.index} | Message sent successfully.")
+                logger.success(f"{account.index} | 消息发送成功。")
                 return response.json()['id']
             else:
                 raise Exception(response.text)
 
         except Exception as e:
             random_sleep = random.randint(config.SETTINGS.PAUSE_BETWEEN_ATTEMPTS[0], config.SETTINGS.PAUSE_BETWEEN_ATTEMPTS[1])
-            logger.error(f"{account.index} | Error sending chat message: {e}. Retrying in {random_sleep} seconds...")
+            logger.error(f"{account.index} | 发送聊天消息错误: {e}. {random_sleep} 秒后重试...")
             await asyncio.sleep(random_sleep)
 
     return None
+
 
 async def delete_message(account: Account, config: Config, session: AsyncSession, server_id: str, channel_id: str, message_id: str) -> bool:
     for retry in range(config.SETTINGS.ATTEMPTS):
@@ -125,13 +126,12 @@ async def delete_message(account: Account, config: Config, session: AsyncSession
             )
 
             if response.status_code == 204:
-                logger.success(f"{account.index} | Message deleted successfully.")
+                logger.success(f"{account.index} | 消息删除成功。")
                 return True
             else:
                 raise Exception(response.text)
 
         except Exception as e:
-            logger.error(f"{account.index} | Error deleting message: {e}")
+            logger.error(f"{account.index} | 删除消息错误: {e}")
 
     return False
-

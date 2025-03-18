@@ -28,7 +28,7 @@ async def reaction_presser(account: Account, config: Config, session: AsyncSessi
 
             except Exception as e:
                 random_sleep = random.randint(config.SETTINGS.PAUSE_BETWEEN_ATTEMPTS[0], config.SETTINGS.PAUSE_BETWEEN_ATTEMPTS[1])
-                logger.error(f"{account.index} | Error: {e}. Retrying in {random_sleep} seconds...")
+                logger.error(f"{account.index} | 错误: {e}. {random_sleep} 秒后重试...")
                 await asyncio.sleep(random_sleep)
     return False
 
@@ -43,7 +43,7 @@ async def press_reaction(account: Account, config: Config, session: AsyncSession
             'sec-ch-ua': '"Not(A:Brand";v="99", "Google Chrome";v="133", "Chromium";v="133"',
             'sec-ch-ua-mobile': '?0',
             'X-Discord-Timezone': 'Etc/GMT-2',
-            'X-Super-Properties': 'eyJvcyI6IldpbmRvd3MiLCJicm93c2VyIjoiQ2hyb21lIiwiZGV2aWNlIjoiIiwic3lzdGVtX2xvY2FsZSI6InJ1IiwiYnJvd3Nlcl91c2VyX2FnZW50IjoiTW96aWxsYS81LjAgKFdpbmRvd3MgTlQgMTAuMDsgV2luNjQ7IHg2NCkgQXBwbGVXZWJLaXQvNTM3LjM2IChLSFRNTCwgbGlrZSBHZWNrbykgQ2hyb21lLzEzMy4wLjAuMCBTYWZhcmkvNTM3LjM2IiwiYnJvd3Nlcl92ZXJzaW9uIjoiMTMzLjAuMC4wIiwib3NfdmVyc2lvbiI6IjEwIiwicmVmZXJyZXIiOiJodHRwczovL2Rpc2NvcmQuY29tLyIsInJlZmVycmluZ19kb21haW4iOiJkaXNjb3JkLmNvbSIsInJlZmVycmVyX2N1cnJlbnQiOiIiLCJyZWZlcnJpbmdfZG9tYWluX2N1cnJlbnQiOiIiLCJyZWxlYXNlX2NoYW5uZWwiOiJzdGFibGUiLCJjbGllbnRfYnVpbGRfbnVtYmVyIjozNzQ2NzksImNsaWVudF9ldmVudF9zb3VyY2UiOm51bGwsImhhc19jbGllbnRfbW9kcyI6ZmFsc2V9',
+            'X-Super-Properties': 'eyJvcyI6IldpbmRvd3MiLCJicm93c2VyIjoiQ2hyb21lIiwiZGV2aWNlIjoiIiwic3lzdGVtX2xvY2FsZSI6InJ1IiwiYnJvd3Nlcl91c2VyX2FnZW50IjoiTW96aWxsYS81LjAgKFdpbmRvd3MgTlQgMTAuMDsgV...',
             'X-Discord-Locale': 'en-US',
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36',
         }
@@ -68,17 +68,16 @@ async def press_reaction(account: Account, config: Config, session: AsyncSession
                 params=params,
             )
 
-
         if 'Unauthorized' in resp.text:
-            logger.error(f"{account.index} | Incorrect discord token or your account is blocked.")
+            logger.error(f"{account.index} | Discord令牌不正确或您的账号已被封停。")
             return None
         
         if resp.status_code == 204:
-            logger.success(f"{account.index} | Successfully reacted to the message!")
+            logger.success(f"{account.index} | 成功对消息进行反应!")
             return True
 
     except Exception as e:
         random_sleep = random.randint(config.SETTINGS.PAUSE_BETWEEN_ATTEMPTS[0], config.SETTINGS.PAUSE_BETWEEN_ATTEMPTS[1])
-        logger.error(f"{account.index} | Error: {e}. Retrying in {random_sleep} seconds...")
+        logger.error(f"{account.index} | 错误: {e}. {random_sleep} 秒后重试...")
         await asyncio.sleep(random_sleep)
         return False

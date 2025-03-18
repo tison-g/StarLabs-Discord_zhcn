@@ -9,7 +9,6 @@ from src.utils.constants import Account
 
 
 
-
 async def press_button(account: Account, config: Config, session: AsyncSession):
     for retry in range(config.SETTINGS.ATTEMPTS):
         try:
@@ -49,17 +48,16 @@ async def press_button(account: Account, config: Config, session: AsyncSession):
 
             response = await session.post('https://discord.com/api/v9/interactions', headers=headers, json=json_data)
             if response.status_code != 204:
-                raise Exception(f"Failed to press button: {response.status_code} | {response.text}")
+                raise Exception(f"按下按钮失败: {response.status_code} | {response.text}")
             else:
-                logger.success(f"[{account.index}] | Button pressed successfully")
+                logger.success(f"[{account.index}] | 按钮按下成功")
                 return True 
-        
+            
         except Exception as e:
             random_pause = random.randint(
                 config.SETTINGS.PAUSE_BETWEEN_ATTEMPTS[0],
                 config.SETTINGS.PAUSE_BETWEEN_ATTEMPTS[1],
             )
-            logger.error(f"[{account.index}] | Error in press_button: {e}. Pausing for {random_pause} seconds.")
+            logger.error(f"[{account.index}] | press_button 出错: {e}. 暂停 {random_pause} 秒。")
             await asyncio.sleep(random_pause)
     return False
-

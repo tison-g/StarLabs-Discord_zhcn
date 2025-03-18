@@ -9,7 +9,6 @@ from src.utils.constants import Account
 from src.utils.writer import update_account
 
 
-
 class AccountEditor:
     def __init__(self, account: Account, config: Config, client: AsyncSession):
         self.account = account
@@ -47,12 +46,12 @@ class AccountEditor:
                 response = await self.client.patch('https://discord.com/api/v9/users/@me', headers=headers, json=json_data)
                 
                 if response.status_code == 200 and response.json()['global_name'] == self.account.new_name:
-                    logger.success(f"{self.account.index} | Name changed to {self.account.new_name}")
+                    logger.success(f"{self.account.index} | 名字已更改为 {self.account.new_name}")
                     return True
 
             except Exception as e:
                 random_sleep = random.randint(self.config.SETTINGS.PAUSE_BETWEEN_ATTEMPTS[0], self.config.SETTINGS.PAUSE_BETWEEN_ATTEMPTS[1])
-                logger.error(f"{self.account.index} | Error changing name: {e}. Retrying in {random_sleep} seconds...")
+                logger.error(f"{self.account.index} | 更改名字时出错: {e}. 重试中，等待 {random_sleep} 秒...")
                 await asyncio.sleep(random_sleep)
 
         return False
@@ -90,12 +89,12 @@ class AccountEditor:
                 
                 if response.status_code == 200 and response.json()['username'] == self.account.new_username:
                     await update_account(self.account.token, "USERNAME", self.account.new_username)
-                    logger.success(f"{self.account.index} | Username changed to {self.account.new_username}")
+                    logger.success(f"{self.account.index} | 用户名已更改为 {self.account.new_username}")
                     return True
 
             except Exception as e:
                 random_sleep = random.randint(self.config.SETTINGS.PAUSE_BETWEEN_ATTEMPTS[0], self.config.SETTINGS.PAUSE_BETWEEN_ATTEMPTS[1])
-                logger.error(f"{self.account.index} | Error changing username: {e}. Retrying in {random_sleep} seconds...")
+                logger.error(f"{self.account.index} | 更改用户名时出错: {e}. 重试中，等待 {random_sleep} 秒...")
                 await asyncio.sleep(random_sleep)
 
         return False
@@ -132,7 +131,7 @@ class AccountEditor:
                 response = await self.client.patch('https://discord.com/api/v9/users/@me', headers=headers, json=json_data)
 
                 if "Password is too weak or common to use." in response.text:
-                    logger.error(f"{self.account.index} | Password {self.account.new_password} is too weak or common to use.")
+                    logger.error(f"{self.account.index} | 密码 {self.account.new_password} 太弱或太常见，无法使用。")
                     return False
                 
                 if response.status_code == 200:
@@ -140,17 +139,17 @@ class AccountEditor:
                     if 'token' in response_data and response_data['token']:
                         await update_account(self.account.token, "DISCORD_TOKEN", response_data['token'])
                         await update_account(self.account.token, "PASSWORD", self.account.new_password)
-                        logger.success(f"{self.account.index} | Password changed successfully. Token updated.")
+                        logger.success(f"{self.account.index} | 密码更改成功。令牌已更新。")
                         return True
                     else:
-                        logger.warning(f"{self.account.index} | Password changed but no token returned.")
+                        logger.warning(f"{self.account.index} | 密码已更改，但未返回令牌。")
                         return True
                 else:
-                    logger.error(f"{self.account.index} | Failed to change password. Status: {response.status_code}")
+                    logger.error(f"{self.account.index} | 更改密码失败。状态: {response.status_code}")
 
             except Exception as e:
                 random_sleep = random.randint(self.config.SETTINGS.PAUSE_BETWEEN_ATTEMPTS[0], self.config.SETTINGS.PAUSE_BETWEEN_ATTEMPTS[1])
-                logger.error(f"{self.account.index} | Error changing password: {e}. Retrying in {random_sleep} seconds...")
+                logger.error(f"{self.account.index} | 更改密码时出错: {e}. 重试中，等待 {random_sleep} 秒...")
                 await asyncio.sleep(random_sleep)
 
         return False
@@ -183,7 +182,7 @@ class AccountEditor:
                     profile_picture = random.choice(self.config.DATA_FOR_TASKS.PROFILE_PICTURES)
                 else:
                     if len(self.config.DATA_FOR_TASKS.PROFILE_PICTURES) < self.account.index:
-                        logger.error(f"{self.account.index} | Not enough profile pictures. Please add more to data/pictures folder.")
+                        logger.error(f"{self.account.index} | 个人资料图片数量不足。请在 data/pictures 文件夹中添加更多图片。")
                         return False
                     else:
                         profile_picture = self.config.DATA_FOR_TASKS.PROFILE_PICTURES[self.account.index]
@@ -195,12 +194,12 @@ class AccountEditor:
                 response = await self.client.patch('https://discord.com/api/v9/users/@me', headers=headers, json=json_data)
                 
                 if response.status_code == 200:
-                    logger.success(f"{self.account.index} | Profile picture changed!")
+                    logger.success(f"{self.account.index} | 个人资料图片已更改!")
                     return True
 
             except Exception as e:
                 random_sleep = random.randint(self.config.SETTINGS.PAUSE_BETWEEN_ATTEMPTS[0], self.config.SETTINGS.PAUSE_BETWEEN_ATTEMPTS[1])
-                logger.error(f"{self.account.index} | Error changing name: {e}. Retrying in {random_sleep} seconds...")
+                logger.error(f"{self.account.index} | 更改名字时出错: {e}. 重试中，等待 {random_sleep} 秒...")
                 await asyncio.sleep(random_sleep)
 
         return False
